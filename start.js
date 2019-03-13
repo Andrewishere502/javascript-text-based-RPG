@@ -29,6 +29,9 @@ LEARNED: about shallow copies. Thanks stackoverflow
 TODO: make alert messages more random, funny and meaningful
 TODO: add to credits https://game-icons.net/
 TODO: add skill and eqipment into chnace to block successfully 
+TODO: Ryan: add health bar for monsters during combat
+TODO: add Joe's all you can eat buffet
+
 
 == DONE STUFF == 
 TODO: add image for death
@@ -317,15 +320,50 @@ function game_messages(message,extra){
         clear_message_counter += 1;
     }
 
-
-
-
     else if (message === "died") {
 
         document.getElementById("main_map").innerHTML = "<br /> *** You have died *** <br /><br /> " + 
         "<img src=\"images/internal-injury.png\"> <br />" +
         "<a href=\"#\" onclick=\"window.location.reload(true);\">Click to restart</a>";
     }
+
+    else if (message === "combat_monster_goes_away") {
+        document.getElementById("messages").innerHTML += "<div class=\"information\">" + 
+        "<span class=\"closebtn\" onclick=\"this.parentElement.style.display='none';\">&times;</span> " + 
+        "The monster decides not to eat you.</div>";
+    }
+
+    else if (message === "combat_talk_fails") {
+        document.getElementById("messages").innerHTML += "<div class=\"information\">" + 
+        "<span class=\"closebtn\" onclick=\"this.parentElement.style.display='none';\">&times;</span> " + 
+        "The monster doesn't understand you!!</div>";
+    }
+
+    else if (message === "combat_nap_fails") {
+        document.getElementById("messages").innerHTML += "<div class=\"information\">" + 
+        "<span class=\"closebtn\" onclick=\"this.parentElement.style.display='none';\">&times;</span> " + 
+        "The monster scowls. I'm not tired! I want to eat you. Slowly! Plus it's not my bedtime!</div>";
+    }
+
+    else if (message === "combat_monster_goes_to_sleep") {
+        document.getElementById("messages").innerHTML += "<div class=\"information\">" + 
+        "<span class=\"closebtn\" onclick=\"this.parentElement.style.display='none';\">&times;</span> " + 
+        "The monster drops to the ground, snoring softly...zzzzzzzzzzzzzzzz.....</div>";
+    }
+
+    else if (message === "combat_monster_goes_to_joes") {
+        document.getElementById("messages").innerHTML += "<div class=\"information\">" + 
+        "<span class=\"closebtn\" onclick=\"this.parentElement.style.display='none';\">&times;</span> " + 
+        "NO WAY! Seriously?! The monster leaps away to Joe's all you can eat buffet.</div>";
+    }
+
+    else if (message === "combat_no_buffet_for_you") {
+        document.getElementById("messages").innerHTML += "<div class=\"information\">" + 
+        "<span class=\"closebtn\" onclick=\"this.parentElement.style.display='none';\">&times;</span> " + 
+        "Why would I go to a buffet if I could just eat you?</div>";
+    }
+    
+
 }
 
 function monsters(monsterid) {
@@ -334,11 +372,11 @@ if (monsterid == 300) {
 
     monster = {
         health: 10,
-        intelligence: 5,
+        intelligence: 500,
         name: "Spider",
         base_chance_to_hit: 60,
         base_damage: 10,
-        talkative: 10,
+        talkative: 9,
         image:'images/spider-alt.png'
     }
 } else if(monsterid == 301) {
@@ -351,8 +389,37 @@ if (monsterid == 300) {
         talkative: 60,
         image:'images/bear-face.png'
     }
+} else if(monsterid == 302) {
+    monster = {
+        health: 10,
+        intelligence: 6,
+        name: "Kiwi Bird",
+        base_chance_to_hit: 50,
+        base_damage: 10,
+        talkative: 30,
+        image:'images/kiwi-bird.png'
+    }
+} else if(monsterid == 303) {
+    monster = {
+        health: 10,
+        intelligence: 9,
+        name: "Android",
+        base_chance_to_hit: 50,
+        base_damage: 10,
+        talkative: 10,
+        image:'images/android.png'
+    }
+}  else if(monsterid == 304) {
+    monster = {
+        health: 40,
+        intelligence: 6,
+        name: "Dragon",
+        base_chance_to_hit: 70,
+        base_damage: 10,
+        talkative: 40,
+        image:'images/dragon.png'
+    }
 }
-
 }
 
 function make_random_terrain() {
@@ -411,6 +478,12 @@ function starting_map() {
     grid.splice(652,1,300);
     // and, because Jake, a bear.
     grid.splice(311,1,301);
+    // I wan't a kiwi bird - Andrew
+    grid.splice(315,1,302);
+    // robots are cool - Andrew
+    grid.splice(500,1,303);
+    // it's a dragon, and I hope we do other stuff with it other than just fight it in the future - Andrew
+    grid.splice(545,1,304);
 
         // the side mountain range along the left side of the map
         grid.splice(0, 1, 100);
@@ -523,6 +596,22 @@ else if (array_for_map[i] === 301) {
     array_for_map[i] = "<i class=\"fas fa-paw fa-fw\" style=\"color:brown\" title=\"A bear. The kind that likes to eat adventurers.\"></i>";
 }   
 
+else if (array_for_map[i] === 302) {
+    // kiwi bird
+    array_for_map[i] = "<i class=\"fas fa-kiwi-bird fa-fw\" style=\"color:purple\" title=\"Don't let it's small size fool you, this kiwi bird is as vicious as any enemy you'll find here.\"></i>";
+}
+
+else if (array_for_map[i] === 303) {
+    // android
+    array_for_map[i] = "<i class=\"fab fa-android fa-fw\" style=\"color:blue\" title=\"It's a hyper-intelligent android.\"></i>";
+}
+
+else if (array_for_map[i] === 304) {
+    // dragon
+    array_for_map[i] = "<i class=\"fas fa-dragon fa-fw\" style=\"color:red\" title=\"A dragon which unsurprisingly eats people\"></i>";
+}
+
+
 }
  
 array_for_map = array_for_map.join('');
@@ -537,7 +626,7 @@ return array_for_map;
 
 function draw_combat_screen(){
     document.getElementById('main_map').innerHTML = "<h2>An altercation!</h2>" +
-    "<p><strong>A</strong> - Attack! | <strong>B</strong> - Block! | <strong>R</strong> - Run away! | <strong>U</strong> - Use Item | <strong>T</strong> - talk things out </p>" +
+    "<p id=\"combat_choices\"><strong>A</strong> - Attack! | <strong>B</strong> - Block! | <strong>R</strong> - Run away! | <strong>U</strong> - Use Item | <strong>T</strong> - talk things out </p>" +
     "<p><img src=\""+ monster.image + "\"/> </p>";
 
 
@@ -552,6 +641,11 @@ function combat_over(combat_result){
     } else if (combat_result == "monster_alive"){
         draw_map(grid);
         game_messages("combat_over");
+        combat_mode = false;
+    } else if (combat_result == "monster_alive_to_joes") {
+        // this is where we should add the monster to joe's. 
+        grid[current_destination] = 20;
+        draw_map(grid);
         combat_mode = false;
     }
 
@@ -592,6 +686,21 @@ function map_interaction_item(map_object,destination){
             return
 
         } else if (map_object === 301) {
+            game_messages("monster");
+            combat(map_object,destination);
+            return
+
+        } else if (map_object === 302) {
+            game_messages("monster");
+            combat(map_object,destination);
+            return
+
+        } else if (map_object === 303) {
+            game_messages("monster");
+            combat(map_object,destination);
+            return
+
+        } else if (map_object === 304) {
             game_messages("monster");
             combat(map_object,destination);
             return
@@ -650,7 +759,58 @@ function combat_determine_outcome(combat_action){
        combat_over("monster_alive");
    }
 
-    return
+   if (combat_action == "talk"){
+    
+    document.getElementById('combat_choices').innerHTML = 
+    "<div align=\"left\">" + 
+    "<p id=\"combat_talk_choice\"><br />Press 1 to tell the " + monster.name + " you are not delicious. " + 
+    "<br />Press 2 to tell the " + monster.name + " to sit down and take a nap. " + 
+    "<br />Press 3 to tell the " + monster.name + " there is an all-you-can-eat buffet down the street" +
+    "</div>";
+   }
+
+   if (combat_action == "talk_1") {
+       if (monster.intelligence < 10 && monster.talkative > 20) {
+           // this monster should be pretty easy to fool.
+           combat_over("monster_alive");
+           game_messages("combat_monster_goes_away");
+       } else {
+           game_messages("combat_talk_fails");
+           draw_combat_screen();
+           combat_monster_action();
+       }
+   }
+
+   if (combat_action == "talk_2") {
+       var base_chance_for_nap_success = ((100-monster.intelligence) + player.luck);
+       var roll_for_nap_success = Math.floor(Math.random() * 100)+1;
+       if (roll_for_nap_success < base_chance_for_nap_success){
+        combat_over("monster_alive");
+        game_messages("combat_monster_goes_to_sleep");
+       } else {
+        game_messages("combat_nap_fails");
+        draw_combat_screen();
+        combat_monster_action();
+       }
+  
+}
+
+if (combat_action == "talk_3") {
+    var base_chance_for_buffet_success = ((100-monster.intelligence) + player.luck + player.charisma);
+    var roll_for_buffet_success = Math.floor(Math.random() * 100)+1;
+    if (roll_for_buffet_success < base_chance_for_buffet_success){
+     combat_over("monster_alive_to_joes");
+     game_messages("combat_monster_goes_to_joes");
+    } else {
+     game_messages("combat_no_buffet_for_you");
+     draw_combat_screen();
+     combat_monster_action();
+    }
+
+}
+
+
+return
 }
 
 function combat_monster_action() {
@@ -695,6 +855,15 @@ function combat_choice(action){
     } else if (action == 't') {
         console.log('talk about it');
         combat_determine_outcome('talk');
+    } else if (action == '1') {
+        console.log('talk option 1');
+        combat_determine_outcome('talk_1');
+    } else if (action == '2') {
+        console.log('talk option 2');
+        combat_determine_outcome('talk_2');
+    } else if (action == '3') {
+        console.log('talk option 3');
+        combat_determine_outcome('talk_3');
     }
 }
 
@@ -823,6 +992,7 @@ function move(direction) {
 function death() {
     game_messages("died");
     player_is_dead = true;
+    combat_mode = false;
     return
 }
 
@@ -1004,6 +1174,20 @@ function main_listener() {
         } else if (combat_mode && (key === 't' || key === 'T')) {
             // then we call the combat function and pass 't' to talk things out.
             combat_choice('t')
+
+        } else if (combat_mode && key === '1') {
+            // then we call the combat function and pass 't' to talk things out.
+            combat_choice('1')
+
+        } else if (combat_mode && key === '2') {
+            // then we call the combat function and pass 't' to talk things out.
+            combat_choice('2')
+
+        } else if (combat_mode && key === '3') {
+            // then we call the combat function and pass 't' to talk things out.
+            combat_choice('3')
+
+
 
         } else if (key === '?' || key === 191) {
             document.getElementById("messages").innerHTML = key;         
